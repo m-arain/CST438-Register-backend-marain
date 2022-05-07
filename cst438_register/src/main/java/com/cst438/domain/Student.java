@@ -1,9 +1,6 @@
 package com.cst438.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 public class Student {
@@ -12,6 +9,7 @@ public class Student {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int student_id;
 	private String name;
+	@Column(unique = true)
 	private String email;
 	private int statusCode;
 	private String status;
