@@ -6,11 +6,10 @@ import com.cst438.domain.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -19,6 +18,21 @@ public class StudentController {
     @Autowired
     StudentRepository studentRepository;
 
+    @GetMapping("/student")
+    @Transactional
+    public List<StudentDTO> getStudents() {
+        List<Student> students =studentRepository.findAll();
+
+        List<StudentDTO> studentsDTO = new ArrayList<StudentDTO>();
+
+        for (Student s:
+             students) {
+            studentsDTO.add(createStudentDTO(s));
+        }
+
+        return studentsDTO;
+    }
+    
     @PostMapping("/student")
     @Transactional
     public StudentDTO addStudent(@RequestBody StudentDTO studentDTO) {
