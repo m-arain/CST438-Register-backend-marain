@@ -1,8 +1,6 @@
 package com.cst438.controller;
 
-import com.cst438.domain.Student;
-import com.cst438.domain.StudentDTO;
-import com.cst438.domain.StudentRepository;
+import com.cst438.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -17,6 +17,9 @@ public class StudentController {
 
     @Autowired
     StudentRepository studentRepository;
+    
+    @Autowired
+    CourseRepository courseRepository;
 
     @GetMapping("/student")
     @Transactional
@@ -35,7 +38,13 @@ public class StudentController {
     
     @PostMapping("/student")
     @Transactional
-    public StudentDTO addStudent(@RequestBody StudentDTO studentDTO) {
+    public StudentDTO addStudent(@RequestBody StudentDTO studentDTO, @AuthenticationPrincipal OAuth2User principal) {
+        String adminEmail = principal.getAttribute("email");
+
+        if (!isEmailAdmin(adminEmail)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to access this resource.");
+        }
+
         Student existingStudent = studentRepository.findByEmail(studentDTO.email);
 
         if (existingStudent == null) {
@@ -54,7 +63,11 @@ public class StudentController {
 
     @PostMapping("/student/placeHold")
     @Transactional
-    public StudentDTO placeStudentHold(@RequestBody StudentDTO studentDTO) {
+    public StudentDTO placeStudentHold(@RequestBody StudentDTO studentDTO, @AuthenticationPrincipal OAuth2User principal) {
+        String adminEmail = principal.getAttribute("email");
+        if (!isEmailAdmin(adminEmail)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to access this resource.");
+        }
         Student student = studentRepository.findByEmail(studentDTO.email);
 
         if (student != null) {
@@ -69,7 +82,11 @@ public class StudentController {
 
     @PostMapping("/student/releaseHold")
     @Transactional
-    public StudentDTO releaseStudentHold(@RequestBody StudentDTO studentDTO) {
+    public StudentDTO releaseStudentHold(@RequestBody StudentDTO studentDTO, @AuthenticationPrincipal OAuth2User principal) {
+        String adminEmail = principal.getAttribute("email");
+        if (!isEmailAdmin(adminEmail)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to access this resource.");
+        }
         Student student = studentRepository.findByEmail(studentDTO.email);
 
         if (student != null) {
@@ -91,5 +108,19 @@ public class StudentController {
         studentDTO.status_code = s.getStatusCode();
 
         return studentDTO;
+    }
+    
+    private boolean isEmailAdmin(String email) {
+        Student student = studentRepository.findByEmail(email);
+        if (student != null) {
+            return false;
+        }
+
+        Course course = courseRepository.findByInstructor(email);
+        if (course != null) {
+            return false;
+        }
+
+        return true;
     }
 }
